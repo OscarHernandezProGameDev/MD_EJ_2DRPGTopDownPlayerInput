@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static UnityEditor.Timeline.TimelinePlaybackControls;
 
 public class InputInvokeCSharpEvents : MonoBehaviour
 {
+    #region  PlayerInput
     private PlayerInput playerInput;
 
     private InputActionMap playerBasic;
@@ -13,10 +15,15 @@ public class InputInvokeCSharpEvents : MonoBehaviour
     private InputAction moveAction;
     private InputAction attackAction;
     private InputAction switchAction;
+    #endregion
 
+    private Animator animator;
     private Rigidbody2D rb;
     [SerializeField] private float speed;
     private Vector2 direction;
+
+    private bool lockHorizontal = false;
+    private bool lockVertical = false;
 
     private void OnEnable()
     {
@@ -24,6 +31,59 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         playerInverted = playerInput.actions.FindActionMap("PlayerInverted");
 
         ActivatePlayerBasic();
+    }
+
+    private void Awake()
+    {
+        playerInput = GetComponent<PlayerInput>();
+        animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
+        animator.SetFloat("valueY", -1);
+    }
+
+    private void Update()
+    {
+        direction = moveAction.ReadValue<Vector2>();
+
+        if (direction != Vector2.zero)
+        {
+            animator.SetFloat("valueX", direction.x);
+            animator.SetFloat("valueY", direction.y);
+            animator.SetBool("isMoving", true);
+        }
+        else
+            animator.SetBool("isMoving", false);
+
+        if (direction.x != 0f)
+        {
+            lockVertical = true;
+            lockHorizontal = false;
+        }
+        else if (direction.y != 0f)
+        {
+            lockHorizontal = true;
+            lockVertical = false;
+        }
+        Debug.Log($"dir: {direction} H: {lockHorizontal} V: {lockVertical}");
+    }
+
+    private void FixedUpdate()
+    {
+        //rb.velocity = direction * speed;
+        if (!lockHorizontal)
+            rb.velocity = new Vector2(direction.x * speed, 0);
+        else if (!lockVertical)
+            rb.velocity = new Vector2(0, direction.y * speed);
+    }
+
+    void AttackExample(InputAction.CallbackContext context)
+    {
+        Debug.Log("Attack!");
+    }
+
+    void StopAttackExample(InputAction.CallbackContext context)
+    {
+        Debug.Log("Stop Attack!");
     }
 
     void SwitchActionMap(InputAction.CallbackContext context)
@@ -60,32 +120,6 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         switchAction.performed += SwitchActionMap;
 
         Debug.Log("Cambio a Basic Map");
-    }
-
-    private void Awake()
-    {
-        playerInput = GetComponent<PlayerInput>();
-        rb = GetComponent<Rigidbody2D>();
-    }
-
-    private void Update()
-    {
-        direction = moveAction.ReadValue<Vector2>();
-    }
-
-    private void FixedUpdate()
-    {
-        rb.velocity = direction * speed;
-    }
-
-    void AttackExample(InputAction.CallbackContext context)
-    {
-        Debug.Log("Attack!");
-    }
-
-    void StopAttackExample(InputAction.CallbackContext context)
-    {
-        Debug.Log("Stop Attack!");
     }
 
     private void OnDisable()
