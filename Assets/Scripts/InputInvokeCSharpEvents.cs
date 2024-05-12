@@ -24,6 +24,7 @@ public class InputInvokeCSharpEvents : MonoBehaviour
 
     private bool lockHorizontal = false;
     private bool lockVertical = false;
+    public bool tryToAttack;
 
     private void OnEnable()
     {
@@ -64,7 +65,6 @@ public class InputInvokeCSharpEvents : MonoBehaviour
             lockHorizontal = true;
             lockVertical = false;
         }
-        Debug.Log($"dir: {direction} H: {lockHorizontal} V: {lockVertical}");
     }
 
     private void FixedUpdate()
@@ -78,12 +78,12 @@ public class InputInvokeCSharpEvents : MonoBehaviour
 
     void AttackExample(InputAction.CallbackContext context)
     {
-        Debug.Log("Attack!");
+        tryToAttack = true;
     }
 
     void StopAttackExample(InputAction.CallbackContext context)
     {
-        Debug.Log("Stop Attack!");
+        tryToAttack = false;
     }
 
     void SwitchActionMap(InputAction.CallbackContext context)
