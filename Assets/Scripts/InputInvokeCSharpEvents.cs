@@ -98,6 +98,8 @@ public class InputInvokeCSharpEvents : MonoBehaviour
     {
         playerInput.SwitchCurrentActionMap("PlayerInverted");
 
+        DesSuscribeActions();
+
         moveAction = playerInverted.FindAction("Move");
         switchAction = playerInverted.FindAction("SwitchMap");
 
@@ -111,6 +113,8 @@ public class InputInvokeCSharpEvents : MonoBehaviour
     {
         playerInput.SwitchCurrentActionMap("PlayerBasic");
 
+        DesSuscribeActions();
+
         attackAction = playerBasic.FindAction("Attack");
         moveAction = playerBasic.FindAction("Move");
         switchAction = playerBasic.FindAction("SwitchMap");
@@ -120,6 +124,14 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         switchAction.performed += SwitchActionMap;
 
         Debug.Log("Cambio a Basic Map");
+    }
+
+    private void DesSuscribeActions()
+    {
+        if (moveAction != null)
+            moveAction.performed -= AttackExample;
+        if (switchAction != null)
+            switchAction.performed -= SwitchActionMap;
     }
 
     private void OnDisable()
