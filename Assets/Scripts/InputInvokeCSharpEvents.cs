@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -12,27 +14,23 @@ public class InputInvokeCSharpEvents : MonoBehaviour
 
     private InputActionMap playerBasic;
     private InputActionMap playerInverted;
+    private InputActionMap mapUI;
+    private InputActionMap mapSwitcher;
     private InputAction moveAction;
     private InputAction attackAction;
     private InputAction switchAction;
+    private InputAction menuActivateDeactivate;
     #endregion
 
     private Animator animator;
     private Rigidbody2D rb;
     [SerializeField] private float speed;
+    [SerializeField] private GameObject canvasObj;
     private Vector2 direction;
 
     private bool lockHorizontal = false;
     private bool lockVertical = false;
     public bool tryToAttack;
-
-    private void OnEnable()
-    {
-        playerBasic = playerInput.actions.FindActionMap("PlayerBasic");
-        playerInverted = playerInput.actions.FindActionMap("PlayerInverted");
-
-        ActivatePlayerBasic();
-    }
 
     private void Awake()
     {
@@ -40,6 +38,35 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         animator.SetFloat("valueY", -1);
+    }
+
+    private void OnEnable()
+    {
+        playerBasic = playerInput.actions.FindActionMap("PlayerBasic");
+        playerInverted = playerInput.actions.FindActionMap("PlayerInverted");
+
+        attackAction = playerBasic.FindAction("Attack");
+        attackAction.performed += AttackExample;
+        attackAction.canceled += StopAttackExample;
+
+        mapUI = playerInput.actions.FindActionMap("UI");
+        mapSwitcher = playerInput.actions.FindActionMap("MapSwitcher");
+
+        if (canvasObj != null)
+        {
+            mapUI.Disable();
+            menuActivateDeactivate = mapSwitcher.FindAction("Menu");
+
+            menuActivateDeactivate.performed += MenuControl;
+
+            mapSwitcher.Enable();
+        }
+        ActivatePlayerBasic();
+    }
+
+    void OnGUI()
+    {
+        GUILayout.TextArea($"Current map: {playerInput.currentActionMap.name}");
     }
 
     private void Update()
@@ -103,10 +130,31 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         moveAction = playerInverted.FindAction("Move");
         switchAction = playerInverted.FindAction("SwitchMap");
 
-        attackAction.canceled += StopAttackExample;
         switchAction.performed += SwitchActionMap;
 
         Debug.Log("Cambio a Inverted Map");
+    }
+
+    InputActionMap placeHolderActionMap;
+    private void MenuControl(InputAction.CallbackContext context)
+    {
+        if (canvasObj == null)
+            return;
+
+        if (placeHolderActionMap == null)
+            placeHolderActionMap = playerInput.currentActionMap;
+
+        if (!canvasObj.activeSelf)
+        {
+            canvasObj.SetActive(true);
+            playerInput.SwitchCurrentActionMap(mapUI.name);
+        }
+        else
+        {
+            canvasObj.SetActive(false);
+            playerInput.SwitchCurrentActionMap(placeHolderActionMap.name);
+            placeHolderActionMap = null;
+        }
     }
 
     private void ActivatePlayerBasic()
@@ -115,12 +163,9 @@ public class InputInvokeCSharpEvents : MonoBehaviour
 
         DesSuscribeActions();
 
-        attackAction = playerBasic.FindAction("Attack");
         moveAction = playerBasic.FindAction("Move");
         switchAction = playerBasic.FindAction("SwitchMap");
 
-        attackAction.performed += AttackExample;
-        attackAction.canceled += StopAttackExample;
         switchAction.performed += SwitchActionMap;
 
         Debug.Log("Cambio a Basic Map");
@@ -139,6 +184,8 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         attackAction.performed -= AttackExample;
         attackAction.canceled -= StopAttackExample;
         switchAction.performed -= SwitchActionMap;
+        if (menuActivateDeactivate != null)
+            menuActivateDeactivate.performed -= MenuControl;
 
         playerBasic.Disable();
     }
