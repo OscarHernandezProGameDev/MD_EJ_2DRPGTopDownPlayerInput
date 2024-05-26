@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEditor.Timeline.TimelinePlaybackControls;
+using UnityEngine.UI;
 
 public class InputInvokeCSharpEvents : MonoBehaviour
 {
@@ -26,6 +26,7 @@ public class InputInvokeCSharpEvents : MonoBehaviour
     private Rigidbody2D rb;
     [SerializeField] private float speed;
     [SerializeField] private GameObject canvasObj;
+    [SerializeField] private Button button;
     private Vector2 direction;
 
     private bool lockHorizontal = false;
@@ -38,6 +39,9 @@ public class InputInvokeCSharpEvents : MonoBehaviour
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         animator.SetFloat("valueY", -1);
+
+        if (button != null)
+            button.onClick.AddListener(ButtonExampleTwo);
     }
 
     private void OnEnable()
@@ -177,6 +181,16 @@ public class InputInvokeCSharpEvents : MonoBehaviour
             moveAction.performed -= AttackExample;
         if (switchAction != null)
             switchAction.performed -= SwitchActionMap;
+    }
+
+    public void ButtonExampleOne()
+    {
+        Debug.Log("El botón se ha activado");
+    }
+
+    public void ButtonExampleTwo()
+    {
+        Debug.Log("El botón secundario se ha activado");
     }
 
     private void OnDisable()
